@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>註冊頁面</title>
+</head>
+<body>
+  <h1>輸入資料</h1>
+  <form id="dataForm">
+    <label for="name">名稱 (name):</label><br>
+    <input type="text" id="name" name="name" required><br><br>
+
+    <label for="email">電子郵件 (email):</label><br>
+    <input type="email" id="email" name="email" required><br><br>
+
+    <label for="password">密碼 (password):</label><br>
+    <input type="password" id="password" name="password" required><br><br>
+
+    <label for="LineID">Line ID:</label><br>
+    <input type="text" id="LineID" name="LineID" required><br><br>
+
+    <label for="phone">電話號碼 (phone):</label><br>
+    <input type="tel" id="phone" name="phone" required><br><br>
+
+    <label for="birthday">生日 (YYYY-MM-DD):</label><br>
+    <input type="date" id="birthday" name="birthday" required><br><br>
+
+    <button type="button" class="signUp">註冊</button>
+  </form>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
+  <script>
+    const signUpBtn = document.querySelector('.signUp');
+signUpBtn.addEventListener('click', function () {
+    const name = document.getElementById('name').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const lineID = document.getElementById('LineID').value;
+    const phone = document.getElementById('phone').value;
+    const birthday = document.getElementById('birthday').value;
+
+    // 檢查 Email 是否已被註冊
+    axios.get(`http://localhost:3000/members?email=${encodeURIComponent(email)}`)
+        .then(function (response) {
+            if (response.data.length > 0) {
+                alert('此 Email 已被註冊，請使用其他 Email');
+            } else {
+                // 如果 Email 未被註冊，進行註冊
+                const data = {
+                    name: name,
+                    email: email,
+                    password: password,
+                    LineID: lineID,
+                    phone: phone,
+                    birthday: birthday
+                };
+
+                axios.post('http://localhost:3000/members', data)
+                    .then(function () {
+                        alert('註冊成功');
+                        window.location.href = '/login.html';
+                    })
+                    .catch(function () {
+                        alert('註冊失敗，請稍後再試');
+                    });
+            }
+        })
+        .catch(function () {
+            alert('檢查 Email 時發生錯誤，請稍後再試');
+        });
+});
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>預約表格</title>
+  <style>
+    section{
+        display: flex;
+    }
+
+    section .form{
+        width: 15%;
+    }
+
+    section #calendar{
+        width: 85%;
+    }
+    .slot-available {
+    background-color: #d4edda;
+    color: #155724;
+    }
+
+    .slot-selected {
+    background-color: #f8d7da;
+    color: #721c24;
+    }
+    .fc-daygrid-event {
+      margin: 0; /* 移除事件之間的外邊距 */
+      padding: 0; /* 移除事件內部填充 */
+    }
+    .fc-daygrid-event-harness {
+      margin: 0; /* 確保容器也沒有空隙 */
+    }
+    .fc-event-time {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <section>
+    <div class="form">
+        <h1>預約表格</h1>
+            <form id="reservationForm">
+            <!-- 使用者基本資料 -->
+            <label for="name">名字:</label><br>
+            <input type="text" id="name" name="name" readonly><br><br>
+
+            <label for="birthday">生日:</label><br>
+            <input type="date" id="birthday" name="birthday" readonly><br><br>
+
+            <label for="email">Email:</label><br>
+            <input type="email" id="email" name="email" readonly><br><br>
+
+            <label for="phone">電話:</label><br>
+            <input type="tel" id="phone" name="phone" readonly><br><br>
+
+            <label for="lineId">Line ID:</label><br>
+            <input type="text" id="lineId" name="lineId" readonly><br><br>
+
+            <!-- 預約相關選項 -->
+            <label for="date">日期:</label><br>
+            <input type="text" id="date" name="date" readonly><br><br>
+
+            <label for="timeSlot">時間:</label><br>
+            <input type="text" id="timeSlot" name="timeSlot" readonly><br><br>
+
+            <label for="bodyPart">部位:</label><br>
+            <select id="bodyPart" name="bodyPart" required>
+            <option value="foot">足部</option>
+            <option value="hand">手部</option>
+            </select><br><br>
+
+            <label for="nailRemoval">卸甲:</label><br>
+            <select id="nailRemoval" name="nailRemoval" required>
+            <option value="true">是</option>
+            <option value="false">否</option>
+            </select><br><br>
+
+            <label for="nailExtension">延甲:</label><br>
+            <select id="nailExtension" name="nailExtension" required>
+            <option value="true">是</option>
+            <option value="false">否</option>
+            </select><br><br>
+
+            <button type="submit">送出預約</button>
+        </form>
+    </div>
+    <div id="calendar"></div>
+  </section>  
+  
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    // 從 localStorage 獲取使用者資料並渲染表單
+    document.addEventListener('DOMContentLoaded', function () {
+      const userData = JSON.parse(localStorage.getItem('user')) || {};
+      console.log(userData)
+
+      // 填入資料並鎖定欄位
+      document.getElementById('name').value = userData[0].name || '';
+      document.getElementById('birthday').value = userData[0].birthday || '';
+      document.getElementById('email').value = userData[0].email || '';
+      document.getElementById('phone').value = userData[0].phone || '';
+      document.getElementById('lineId').value = userData[0].LineID || '';
+    });
+
+    // 表單提交處理
+    document.getElementById('reservationForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      // 收集表單資料
+      const reservationData = {
+        name: document.getElementById('name').value,
+        birthday: document.getElementById('birthday').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        LineID: document.getElementById('lineId').value,
+        date: document.getElementById('date').value,
+        timeSlot: document.getElementById('timeSlot').value,
+        bodyPart: document.getElementById('bodyPart').value,
+        nailRemoval: document.getElementById('nailRemoval').value === 'true',
+        nailExtension: document.getElementById('nailExtension').value === 'true'
+      };
+      reservedTimeSlots.push({date:date.value,timeSlot:timeSlot.value});
+      console.log(reservationData,reservedTimeSlots);
+      const storedId = localStorage.getItem('scheduleConfigId');
+
+      Promise.all([
+        axios.post('http://localhost:3000/appointment', reservationData),
+        axios.patch(`http://localhost:3000/scheduleConfig/${storedId}`,{ reservedTimeSlots: reservedTimeSlots })
+      ])
+      .then(([postResponse , putResponse ]) => {
+          // 分別處理兩個請求的回應
+          console.log('PUT 回應:', putResponse.data);
+          console.log('POST 回應:', postResponse.data);
+          alert('預約成功');
+          window.location.reload()
+      })
+      .catch(error => {
+          // 處理錯誤
+          console.error('發送請求時發生錯誤:', error);
+          alert('請求失敗，請檢查網路或伺服器狀態');
+      });
+    });
+
+    let reservedTimeSlots = [];
+    document.addEventListener('DOMContentLoaded', function () {
+        const dateInput = document.getElementById("date");
+        const timeSlotInput = document.getElementById("timeSlot");
+      // 只請求 scheduleConfig API
+        axios
+          .get("http://localhost:3000/scheduleConfig")
+          .then(function (response) {
+            const scheduleConfig = response.data; // 時間配置
+            const id = scheduleConfig[0].id; // 獲取第一個 scheduleConfig 的 id
+
+            // 儲存到 localStorage
+            localStorage.setItem('scheduleConfigId', id);
+
+            // 取得必要的數據
+            const lastBookableDate = scheduleConfig[0]?.lastBookableDate || getLastDayOfCurrentMonth(); // 默認為當月最後一天
+            const unavailableDates = scheduleConfig[0]?.unavailableTimeSlots || [];
+            reservedTimeSlots = scheduleConfig[0]?.reservedTimeSlots || [];
+
+            // 初始化日曆
+            initializeCalendar(unavailableDates, reservedTimeSlots, lastBookableDate, scheduleConfig);
+          })
+          .catch(function (error) {
+            console.error("Error fetching data:", error);
+          });
+
+        function getLastDayOfCurrentMonth() {
+          const today = new Date();  // 當前日期
+          const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);  // 下個月的第一天減去一天即為當月的最後一天
+          return lastDay.toISOString().split('T')[0];  // 格式化為 YYYY-MM-DD
+        }
+
+        function initializeCalendar(unavailableDates, reservedTimeSlots, lastBookableDate, scheduleConfig) {
+            const calendarEl = document.getElementById('calendar');
+
+            // 固定的三個時間段
+            const fixedSlots = [
+                { start: '10:30:00', title: '10:30～14:30', end: '14:30:00' },
+                { start: '14:30:00', title: '14:30～18:30', end: '18:30:00' },
+                { start: '18:30:00', title: '18:30～22:30', end: '22:30:00' }
+            ];
+
+            function formatDateToLocal(date) {
+                return date.toLocaleDateString('en-CA'); // YYYY-MM-DD
+            }
+
+            // 動態生成每日的時間段
+            function generateSlots(currentDate, endDate, unavailableDates, reservedTimeSlots) {
+                const slots = [];
+                let current = new Date(currentDate);
+
+                while (current <= endDate) {
+                    const dateStr = formatDateToLocal(current);
+
+                    // 檢查是否為不可預約日期
+                    if (unavailableDates.includes(dateStr)) {
+                        current.setDate(current.getDate() + 1);
+                        continue; // 跳過不開放的日期
+                    }
+
+                fixedSlots.forEach(slot => {
+                    // 檢查該時間段是否已被占用
+                    const isReserved = reservedTimeSlots.some(reserved => {
+                        return reserved.date === dateStr && reserved.timeSlot === slot.title;
+                    });
+
+                    // 僅將未被占用的時間段加入事件
+                    if (!isReserved) {
+                        slots.push({
+                            title: slot.title,
+                            start: dateStr + 'T' + slot.start,
+                            end: dateStr + 'T' + slot.end,
+                            className: 'slot-available',
+                            extendedProps: {
+                                isReserved: false
+                            }
+                        });
+                    }
+                });
+                current.setDate(current.getDate() + 1);
+            }
+            return slots;
+          }
+
+            // 設定日曆的範圍，將 lastBookableDate 作為結束日期
+            const startDate = new Date();
+            const endDate = new Date(lastBookableDate);
+
+            // 動態生成所有時間段
+            const slots = generateSlots(startDate, endDate, unavailableDates, reservedTimeSlots);
+
+            // 初始化 FullCalendar
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                initialDate: new Date(),
+                events: slots,
+                eventClick: function (info) {
+                    const eventEl = info.el;
+                    
+                    // 檢查是否點擊了可用的時間段
+                    if (dateInput.value && timeSlotInput.value && eventEl.classList.contains("slot-selected")) {
+                        // 恢復為可選狀態
+                        eventEl.classList.remove("slot-selected");
+                        eventEl.classList.add("slot-available");
+                        dateInput.value = "";
+                        timeSlotInput.value = "";
+                    }else if(dateInput.value && timeSlotInput.value){
+                        alert("一次只能選擇一個時段，請先取消原有的選擇");
+                    }else{
+                        // 標記為選中並更新表單輸入
+                        eventEl.classList.remove("slot-available");
+                        eventEl.classList.add("slot-selected");
+                        dateInput.value = info.event.start.toISOString().split("T")[0];
+                        timeSlotInput.value = info.event.title;
+                    }
+                }
+            });
+            calendar.render();
+        }
+    });
+  </script>
+</body>
+</html>

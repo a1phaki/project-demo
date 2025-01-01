@@ -23,6 +23,7 @@
   <script>
     // 綁定登入按鈕事件
     const loginBtn = document.getElementById('loginBtn');
+    
     loginBtn.addEventListener('click', function () {
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
@@ -34,29 +35,20 @@
       }
 
       //email,password為需要驗證的資料
-    axios.get(`https://webtestapi-e228e4978c3c.herokuapp.com/members?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`)
-            .then(response => {
-                // 假設後端返回驗證成功的資料
-            const userData = response.data;
-            console.log('返回的資料:', response.data);
-            
-
-            // 儲存資料到 localStorage
-            localStorage.setItem('user', JSON.stringify(userData));
-            
-            alert('登入成功');
-
-            //判斷登入者user
-            if(userData.user ==='admin'){
-              window.location.herf = 'admin.html';
-            }else{
-              window.location.href = 'appointment.html';
+      axios.get(`https://webtestapi-e228e4978c3c.herokuapp.com/members?email=${encodeURIComponent(email)}`)
+        .then(response => {
+            const user = response.data[0];
+            console.log(user);
+            if (user && user.password === password) {
+                alert('登入成功');
+                localStorage.setItem('user', JSON.stringify(user));
+                window.location.href = user.user === 'admin' ? 'admin.html' : 'appointment.html';
+            } else {
+                alert('登入失敗，請檢查您的郵件或密碼');
             }
-            
-           
-            })
+        })
         .catch(error => {
-            alert('登入失敗，請檢查您的郵件或密碼');
+            alert('登入失敗，請檢查您的網路或伺服器');
             console.error('錯誤:', error);
         });
     });

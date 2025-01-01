@@ -74,168 +74,175 @@
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script>
-    const userData = JSON.parse(localStorage.getItem('user')) || {};
-    console.log(userData);
-    // 表單提交處理
-    document.getElementById('reservationForm').addEventListener('submit', function (e) {
-      e.preventDefault();
-      date = document.getElementById('timeSlot').value.split('，')[0];
-      timeSlot = document.getElementById('timeSlot').value.split('，')[1];
-      // 收集表單資料
-      const reservationData = {
-        name: userData[0].name,
-        birthday: userData[0].birthday,
-        email: userData[0].email,
-        phone: userData[0].phone,
-        LineID: userData[0].LineID,
-        date: date,
-        timeSlot: timeSlot,
-        bodyPart: document.getElementById('bodyPart').value,
-        nailRemoval: document.getElementById('nailRemoval').value === 'true',
-        nailExtension: document.getElementById('nailExtension').value === 'true'
-      };
-      reservedTimeSlots.push({date:date,timeSlot:timeSlot});
-      console.log(reservationData,reservedTimeSlots);
-      const storedId = localStorage.getItem('scheduleConfigId');
+    // 嘗試從 localStorage 中獲取已登入的使用者資料
+    const userData = JSON.parse(localStorage.getItem('user'));
+    if (!userData) {
+        // 如果無法取得使用者資料，提示使用者並跳轉回登入頁面
+        alert('無法取得使用者資料，請確認您已登入。');
+        window.location.href = 'login.html';
+    }
 
-      Promise.all([
-        axios.post('https://webtestapi-e228e4978c3c.herokuapp.com/appointment', reservationData),
-        axios.patch(`https://webtestapi-e228e4978c3c.herokuapp.com/scheduleConfig/${storedId}`,{ reservedTimeSlots: reservedTimeSlots })
-      ])
-      .then(([postResponse , putResponse ]) => {
-          // 分別處理兩個請求的回應
-          console.log('PUT 回應:', putResponse.data);
-          console.log('POST 回應:', postResponse.data);
-          alert('預約成功');
-          window.location.href = 'admin.html';
-      })
-      .catch(error => {
-          // 處理錯誤
-          console.error('發送請求時發生錯誤:', error);
-          alert('請求失敗，請檢查網路或伺服器狀態');
-      });
-    });
+    let reservedTimeSlots = []; // 儲存已預約的時間段
 
-    let reservedTimeSlots = [];
+    // 等待 DOM 加載完成後執行初始化邏輯
     document.addEventListener('DOMContentLoaded', function () {
-        
-        const timeSlotInput = document.getElementById("timeSlot");
-      // 只請求 scheduleConfig API
+        const timeSlotInput = document.getElementById("timeSlot"); // 獲取時間段輸入框的 DOM 元素
+
+        // 向後端請求 scheduleConfig 的資料
         axios
-          .get("http://localhost:3000/scheduleConfig")
+          .get("https://webtestapi-e228e4978c3c.herokuapp.com/scheduleConfig")
           .then(function (response) {
-            const scheduleConfig = response.data; // 時間配置
-            const id = scheduleConfig[0].id; // 獲取第一個 scheduleConfig 的 id
+              const scheduleConfig = response.data; // 儲存返回的時間配置資料
+              const id = scheduleConfig[0].id; // 獲取第一個時間配置的 ID
 
-            // 儲存到 localStorage
-            localStorage.setItem('scheduleConfigId', id);
+              // 將 scheduleConfig 的 ID 儲存到 localStorage
+              localStorage.setItem('scheduleConfigId', id);
 
-            // 取得必要的數據
-            const lastBookableDate = scheduleConfig[0]?.lastBookableDate || getLastDayOfCurrentMonth(); // 默認為當月最後一天
-            const unavailableDates = scheduleConfig[0]?.unavailableTimeSlots || [];
-            reservedTimeSlots = scheduleConfig[0]?.reservedTimeSlots || [];
+              // 初始化必要的資料：不可預約日期、已預約時段及可預約的最後一天
+              const lastBookableDate = scheduleConfig[0]?.lastBookableDate || getLastDayOfCurrentMonth(); // 默認為當月最後一天
+              const unavailableDates = scheduleConfig[0]?.unavailableTimeSlots || []; // 不可預約日期
+              reservedTimeSlots = scheduleConfig[0]?.reservedTimeSlots || []; // 已預約時段
 
-            // 初始化日曆
-            initializeCalendar(unavailableDates, reservedTimeSlots, lastBookableDate, scheduleConfig);
+              // 初始化日曆
+              initializeCalendar(unavailableDates, reservedTimeSlots, lastBookableDate, scheduleConfig);
           })
           .catch(function (error) {
-            console.error("Error fetching data:", error);
+              // 如果請求失敗，輸出錯誤訊息
+              console.error("Error fetching data:", error);
           });
 
+        // 獲取當月最後一天的函數
         function getLastDayOfCurrentMonth() {
-          const today = new Date();  // 當前日期
-          const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);  // 下個月的第一天減去一天即為當月的最後一天
-          return lastDay.toISOString().split('T')[0];  // 格式化為 YYYY-MM-DD
+            const today = new Date(); // 當前日期
+            const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0); // 下個月的第一天減一天即為當月最後一天
+            return lastDay.toISOString().split('T')[0]; // 返回格式為 YYYY-MM-DD
         }
 
+        // 初始化日曆的函數
         function initializeCalendar(unavailableDates, reservedTimeSlots, lastBookableDate, scheduleConfig) {
-            const calendarEl = document.getElementById('calendar');
+            const calendarEl = document.getElementById('calendar'); // 獲取日曆元素的 DOM
 
-            // 固定的三個時間段
+            // 固定三個時間段
             const fixedSlots = [
                 { start: '10:30:00', title: '10:30～14:30', end: '14:30:00' },
                 { start: '14:30:00', title: '14:30～18:30', end: '18:30:00' },
                 { start: '18:30:00', title: '18:30～22:30', end: '22:30:00' }
             ];
 
+            // 將日期格式化為 YYYY-MM-DD 的函數
             function formatDateToLocal(date) {
-                return date.toLocaleDateString('en-CA'); // YYYY-MM-DD
+                return date.toLocaleDateString('en-CA'); // 使用 en-CA 格式
             }
 
             // 動態生成每日的時間段
             function generateSlots(currentDate, endDate, unavailableDates, reservedTimeSlots) {
-                const slots = [];
+                const slots = []; // 儲存可用時段
                 let current = new Date(currentDate);
 
-                while (current <= endDate ||formatDateToLocal(current) === formatDateToLocal(endDate)) {
-                  const dateStr = formatDateToLocal(current);
+                // 循環遍歷每一天，直到結束日期
+                while (current <= endDate) {
+                    const dateStr = formatDateToLocal(current); // 將當前日期轉為字串
 
-                  // 檢查是否為不可預約日期
-                  if (unavailableDates.includes(dateStr)) {
-                      current.setDate(current.getDate() + 1);
-                      continue; // 跳過不開放的日期
-                  }
+                    // 檢查是否為不可預約日期
+                    if (unavailableDates.includes(dateStr)) {
+                        current.setDate(current.getDate() + 1);
+                        continue; // 跳過此日期
+                    }
 
-                  // 固定時段生成可用時段
-                  fixedSlots.forEach(slot => {
-                      // 檢查該時間段是否已被占用
-                      const isReserved = reservedTimeSlots.some(reserved => {
-                          return reserved.date === dateStr && reserved.timeSlot === slot.title;
-                      });
+                    // 將當前日期的固定時段加入可用時段
+                    fixedSlots.forEach(slot => {
+                        const isReserved = reservedTimeSlots.some(reserved => {
+                            return reserved.date === dateStr && reserved.timeSlot === slot.title; // 檢查該時段是否已被占用
+                        });
 
-                      // 僅將未被占用的時間段加入事件
-                      if (!isReserved) {
-                          slots.push({
-                              title: slot.title,
-                              start: dateStr + 'T' + slot.start,
-                              end: dateStr + 'T' + slot.end,
-                              className: 'slot-available',
-                              extendedProps: {
-                                  isReserved: false
-                              }
-                          });
-                      }
-                  });
-                  current.setDate(current.getDate() + 1);
-              }
-              return slots;
+                        if (!isReserved) {
+                            slots.push({
+                                title: slot.title, // 時段標題
+                                start: dateStr + 'T' + slot.start, // 開始時間
+                                end: dateStr + 'T' + slot.end, // 結束時間
+                                className: 'slot-available', // 可用時段樣式
+                                extendedProps: { isReserved: false } // 額外屬性
+                            });
+                        }
+                    });
+                    current.setDate(current.getDate() + 1); // 前進一天
+                }
+                return slots; // 返回生成的時段
+            }
 
-          }
+            const startDate = new Date(); // 設定起始日期為今天
+            const endDate = new Date(lastBookableDate); // 設定結束日期
 
-            // 設定日曆的範圍，將 lastBookableDate 作為結束日期
-            const startDate = new Date();
-            const endDate = new Date(lastBookableDate);
-            
             // 動態生成所有時間段
             const slots = generateSlots(startDate, endDate, unavailableDates, reservedTimeSlots);
 
             // 初始化 FullCalendar
             const calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                initialDate: new Date(),
-                events: slots,
+                initialView: 'dayGridMonth', // 預設顯示月視圖
+                initialDate: new Date(), // 起始顯示的日期
+                events: slots, // 載入動態生成的事件
                 eventClick: function (info) {
-                    const eventEl = info.el;
-                    
-                    // 檢查是否點擊了可用的時間段
-                    if ( timeSlotInput.value && eventEl.classList.contains("slot-selected")) {
-                        // 恢復為可選狀態
+                    const eventEl = info.el; // 獲取被點擊的事件元素
+
+                    // 如果已有選中的時段，需先取消選擇
+                    if (timeSlotInput.value && eventEl.classList.contains("slot-selected")) {
                         eventEl.classList.remove("slot-selected");
                         eventEl.classList.add("slot-available");
-                        timeSlotInput.value = "";
-                    }else if(timeSlotInput.value){
+                        timeSlotInput.value = ""; // 清空輸入框
+                    } else if (timeSlotInput.value) {
                         alert("一次只能選擇一個時段，請先取消原有的選擇");
-                    }else{
-                        // 標記為選中並更新表單輸入
+                    } else {
                         eventEl.classList.remove("slot-available");
                         eventEl.classList.add("slot-selected");
                         timeSlotInput.value = `${info.event.start.toISOString().split("T")[0]}，${info.event.title}`;
                     }
                 }
             });
-            calendar.render();
+            calendar.render(); // 渲染日曆
         }
     });
+
+    // 表單提交處理
+    document.getElementById('reservationForm').addEventListener('submit', function (e) {
+        e.preventDefault(); // 防止表單的默認提交行為
+
+        const date = document.getElementById('timeSlot').value.split('，')[0]; // 獲取選擇的日期
+        const timeSlot = document.getElementById('timeSlot').value.split('，')[1]; // 獲取選擇的時段
+
+        // 收集表單資料
+        const reservationData = {
+            name: userData[0].name,
+            birthday: userData[0].birthday,
+            email: userData[0].email,
+            phone: userData[0].phone,
+            LineID: userData[0].LineID,
+            date: date,
+            timeSlot: timeSlot,
+            bodyPart: document.getElementById('bodyPart').value,
+            nailRemoval: document.getElementById('nailRemoval').value === 'true',
+            nailExtension: document.getElementById('nailExtension').value === 'true'
+        };
+
+        reservedTimeSlots.push({ date: date, timeSlot: timeSlot }); // 將新的預約時段加入已預約時段
+        const storedId = localStorage.getItem('scheduleConfigId'); // 獲取 scheduleConfig 的 ID
+
+        // 並行發送兩個請求
+        Promise.all([
+            axios.post('https://webtestapi-e228e4978c3c.herokuapp.com/appointment', reservationData),
+            axios.patch(`https://webtestapi-e228e4978c3c.herokuapp.com/scheduleConfig/${storedId}`, { reservedTimeSlots: reservedTimeSlots })
+        ])
+        .then(([postResponse, patchResponse]) => {
+            console.log('PATCH 回應:', patchResponse.data);
+            console.log('POST 回應:', postResponse.data);
+            alert('預約成功');
+            window.location.href = 'admin.html'; // 跳轉到管理頁面
+        })
+        .catch(error => {
+            console.error('發送請求時發生錯誤:', error);
+            alert('請求失敗，請檢查網路或伺服器狀態');
+        });
+    });
   </script>
+
 </body>
 </html>

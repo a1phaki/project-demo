@@ -41,13 +41,14 @@
         const birthday = document.getElementById('birthday').value;
 
         // 檢查 Email 是否已被註冊
-        axios.get(`http://localhost:3000/members?email=${encodeURIComponent(email)}`)
+        axios.get(`https://webtestapi-e228e4978c3c.herokuapp.com/members?email=${encodeURIComponent(email)}`)
             .then(function (response) {
                 if (response.data.length > 0) {
                     alert('此 Email 已被註冊，請使用其他 Email');
                 } else {
                     // 如果 Email 未被註冊，進行註冊
                     const data = {
+                        user:'user',
                         name: name,
                         email: email,
                         password: password,
@@ -56,7 +57,7 @@
                         birthday: birthday
                     };
 
-                    axios.post('http://localhost:3000/members', data)
+                    axios.post('https://webtestapi-e228e4978c3c.herokuapp.com/members', data)
                         .then(function () {
                             alert('註冊成功');
                             window.location.href = 'login.html';

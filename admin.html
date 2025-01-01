@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #calendar {
+            max-width: 900px;
+            margin: 40px auto;
+        }
+        .inputs {
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="inputs">
+        <label for="lastBookableDate">Set Last Bookable Date:</label>
+        <input type="date" id="lastBookableDate" />
+        <button id="setLastBookableDate">更新可預約日期</button>
+        <button id="update">更新躺平日</button>
+    </div>
+
+    <div id='calendar'></div>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+    const timeSlotInput = document.getElementById("timeSlot");
+    const updateBtn = document.getElementById('update');
+    const setLastBookableDateBtn = document.getElementById('setLastBookableDate'); // 獲取 "Set Date" 按鈕
+    let unavailableDates = [];
+
+    axios
+        .get("https://webtestapi-e228e4978c3c.herokuapp.com/scheduleConfig")
+        .then(function (response) {
+            const scheduleConfig = response.data[0];
+            const id = scheduleConfig.id;
+            localStorage.setItem('scheduleConfigId', id);
+
+            const lastBookableDate = scheduleConfig.lastBookableDate || getLastDayOfCurrentMonth();
+            unavailableDates = scheduleConfig.unavailableTimeSlots || [];
+            const reservedTimeSlots = scheduleConfig.reservedTimeSlots || [];
+
+            initializeCalendar(unavailableDates, reservedTimeSlots, lastBookableDate);
+        })
+        .catch(function (error) {
+            console.error("Error fetching data:", error);
+        });
+
+    function getLastDayOfCurrentMonth() {
+        const today = new Date();
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        return lastDay.toISOString().split('T')[0];
+    }
+
+    function initializeCalendar(unavailableDates, reservedTimeSlots, lastBookableDate) {
+        const calendarEl = document.getElementById('calendar');
+
+        function formatDate(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        const events = [];
+
+        // 添加 unavailableDates (紅色)
+        unavailableDates.forEach(date => {
+            events.push({
+                title: '躺平日',
+                start: date,
+                color: 'red',
+                allDay: true,
+                extendedProps: { type: 'unavailable' }
+            });
+        });
+
+        // 添加 reservedTimeSlots (藍色)
+        reservedTimeSlots.forEach(slot => {
+            events.push({
+                title: slot.timeSlot,
+                start: slot.date,
+                color: 'blue',
+                allDay: true,
+                extendedProps: { type: 'reserved' }
+            });
+        });
+
+        // 添加剩餘日期 (綠色)
+        const startDate = new Date();
+        const endDate = new Date(lastBookableDate);
+
+        while (startDate <= endDate||formatDate(startDate) === formatDate(endDate)) {
+            const dateStr = formatDate(startDate);
+            if (!unavailableDates.includes(dateStr) && !reservedTimeSlots.some(slot => slot.date === dateStr)) {
+                events.push({
+                    title: '可躺平',
+                    start: dateStr,
+                    color: 'green',
+                    allDay: true,
+                    extendedProps: { type: 'available' }
+                });
+            }
+            startDate.setDate(startDate.getDate() + 1);
+        }
+
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            locale: 'zh-cn', // 設置為中文
+            initialView: 'dayGridMonth',
+            events: events,
+            eventClick: function (info) {
+                const event = info.event;
+
+                if (event.extendedProps.type === 'available') {
+                    // 綠色點擊 -> 紅色 (躺平日)
+                    event.setProp('color', 'red');
+                    event.setProp('title','躺平日');
+                    event.setExtendedProp('type', 'unavailable');
+                    unavailableDates.push(event.startStr);
+                } else if (event.extendedProps.type === 'unavailable') {
+                    // 紅色點擊 -> 綠色 (恢復可預約)
+                    event.setProp('color', 'green');
+                    event.setProp('title','可躺平');
+                    event.setExtendedProp('type', 'available');
+                    const index = unavailableDates.indexOf(event.startStr);
+                    if (index > -1) unavailableDates.splice(index, 1);
+                }
+                console.log(unavailableDates)
+            }
+        });
+        calendar.render();
+    }
+
+    // 點擊 "Set Date" 按鈕，將選擇的日期更新到 API
+    setLastBookableDateBtn.addEventListener('click', function () {
+        const selectedDate = document.getElementById('lastBookableDate').value;
+
+        if (selectedDate) {
+            axios.patch(`https://webtestapi-e228e4978c3c.herokuapp.com/scheduleConfig/${localStorage.getItem('scheduleConfigId')}`, {
+                lastBookableDate: selectedDate
+            })
+            .then(function(response) {
+                alert('Last bookable date 已更新！頁面將重新整理。');
+                location.reload(); // 重整畫面
+            })
+            .catch(function(error) {
+                console.error("Error updating last bookable date:", error);
+            });
+        }
+    });
+
+    // 點擊 "Update" 按鈕，將 unavailableDates 更新到 API
+    updateBtn.addEventListener('click', function () {
+        axios.patch(`https://webtestapi-e228e4978c3c.herokuapp.com/scheduleConfig/${localStorage.getItem('scheduleConfigId')}`, {
+            unavailableTimeSlots: unavailableDates
+        })
+        .then(function(response) {
+            console.log("Unavailable dates updated:", response.data);
+            alert('Unavailable dates 已更新！頁面將重新整理。');
+            location.reload();
+        })
+        .catch(function(error) {
+            console.error("Error updating unavailable dates:", error);
+        });
+    });
+});
+
+    </script>
+</body>
+</html>

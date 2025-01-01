@@ -42,27 +42,9 @@
     <div class="form">
         <h1>預約表格</h1>
             <form id="reservationForm">
-            <!-- 使用者基本資料 -->
-            <label for="name">名字:</label><br>
-            <input type="text" id="name" name="name" readonly><br><br>
-
-            <label for="birthday">生日:</label><br>
-            <input type="date" id="birthday" name="birthday" readonly><br><br>
-
-            <label for="email">Email:</label><br>
-            <input type="email" id="email" name="email" readonly><br><br>
-
-            <label for="phone">電話:</label><br>
-            <input type="tel" id="phone" name="phone" readonly><br><br>
-
-            <label for="lineId">Line ID:</label><br>
-            <input type="text" id="lineId" name="lineId" readonly><br><br>
-
             <!-- 預約相關選項 -->
-            <label for="date">日期:</label><br>
-            <input type="text" id="date" name="date" readonly><br><br>
 
-            <label for="timeSlot">時間:</label><br>
+            <label for="timeSlot">日期與時間:</label><br>
             <input type="text" id="timeSlot" name="timeSlot" readonly><br><br>
 
             <label for="bodyPart">部位:</label><br>
@@ -92,50 +74,40 @@
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script>
-    // 從 localStorage 獲取使用者資料並渲染表單
-    document.addEventListener('DOMContentLoaded', function () {
-      const userData = JSON.parse(localStorage.getItem('user')) || {};
-      console.log(userData)
-
-      // 填入資料並鎖定欄位
-      document.getElementById('name').value = userData[0].name || '';
-      document.getElementById('birthday').value = userData[0].birthday || '';
-      document.getElementById('email').value = userData[0].email || '';
-      document.getElementById('phone').value = userData[0].phone || '';
-      document.getElementById('lineId').value = userData[0].LineID || '';
-    });
-
+    const userData = JSON.parse(localStorage.getItem('user')) || {};
+    console.log(userData);
     // 表單提交處理
     document.getElementById('reservationForm').addEventListener('submit', function (e) {
       e.preventDefault();
-
+      date = document.getElementById('timeSlot').value.split('，')[0];
+      timeSlot = document.getElementById('timeSlot').value.split('，')[1];
       // 收集表單資料
       const reservationData = {
-        name: document.getElementById('name').value,
-        birthday: document.getElementById('birthday').value,
-        email: document.getElementById('email').value,
-        phone: document.getElementById('phone').value,
-        LineID: document.getElementById('lineId').value,
-        date: document.getElementById('date').value,
-        timeSlot: document.getElementById('timeSlot').value,
+        name: userData[0].name,
+        birthday: userData[0].birthday,
+        email: userData[0].email,
+        phone: userData[0].phone,
+        LineID: userData[0].LineID,
+        date: date,
+        timeSlot: timeSlot,
         bodyPart: document.getElementById('bodyPart').value,
         nailRemoval: document.getElementById('nailRemoval').value === 'true',
         nailExtension: document.getElementById('nailExtension').value === 'true'
       };
-      reservedTimeSlots.push({date:date.value,timeSlot:timeSlot.value});
+      reservedTimeSlots.push({date:date,timeSlot:timeSlot});
       console.log(reservationData,reservedTimeSlots);
       const storedId = localStorage.getItem('scheduleConfigId');
 
       Promise.all([
-        axios.post('http://localhost:3000/appointment', reservationData),
-        axios.patch(`http://localhost:3000/scheduleConfig/${storedId}`,{ reservedTimeSlots: reservedTimeSlots })
+        axios.post('https://webtestapi-e228e4978c3c.herokuapp.com/appointment', reservationData),
+        axios.patch(`https://webtestapi-e228e4978c3c.herokuapp.com/scheduleConfig/${storedId}`,{ reservedTimeSlots: reservedTimeSlots })
       ])
       .then(([postResponse , putResponse ]) => {
           // 分別處理兩個請求的回應
           console.log('PUT 回應:', putResponse.data);
           console.log('POST 回應:', postResponse.data);
           alert('預約成功');
-          window.location.reload()
+          window.location.href = 'admin.html';
       })
       .catch(error => {
           // 處理錯誤
@@ -146,7 +118,7 @@
 
     let reservedTimeSlots = [];
     document.addEventListener('DOMContentLoaded', function () {
-        const dateInput = document.getElementById("date");
+        
         const timeSlotInput = document.getElementById("timeSlot");
       // 只請求 scheduleConfig API
         axios
@@ -195,43 +167,45 @@
                 const slots = [];
                 let current = new Date(currentDate);
 
-                while (current <= endDate) {
-                    const dateStr = formatDateToLocal(current);
+                while (current <= endDate ||formatDateToLocal(current) === formatDateToLocal(endDate)) {
+                  const dateStr = formatDateToLocal(current);
 
-                    // 檢查是否為不可預約日期
-                    if (unavailableDates.includes(dateStr)) {
-                        current.setDate(current.getDate() + 1);
-                        continue; // 跳過不開放的日期
-                    }
+                  // 檢查是否為不可預約日期
+                  if (unavailableDates.includes(dateStr)) {
+                      current.setDate(current.getDate() + 1);
+                      continue; // 跳過不開放的日期
+                  }
 
-                fixedSlots.forEach(slot => {
-                    // 檢查該時間段是否已被占用
-                    const isReserved = reservedTimeSlots.some(reserved => {
-                        return reserved.date === dateStr && reserved.timeSlot === slot.title;
-                    });
+                  // 固定時段生成可用時段
+                  fixedSlots.forEach(slot => {
+                      // 檢查該時間段是否已被占用
+                      const isReserved = reservedTimeSlots.some(reserved => {
+                          return reserved.date === dateStr && reserved.timeSlot === slot.title;
+                      });
 
-                    // 僅將未被占用的時間段加入事件
-                    if (!isReserved) {
-                        slots.push({
-                            title: slot.title,
-                            start: dateStr + 'T' + slot.start,
-                            end: dateStr + 'T' + slot.end,
-                            className: 'slot-available',
-                            extendedProps: {
-                                isReserved: false
-                            }
-                        });
-                    }
-                });
-                current.setDate(current.getDate() + 1);
-            }
-            return slots;
+                      // 僅將未被占用的時間段加入事件
+                      if (!isReserved) {
+                          slots.push({
+                              title: slot.title,
+                              start: dateStr + 'T' + slot.start,
+                              end: dateStr + 'T' + slot.end,
+                              className: 'slot-available',
+                              extendedProps: {
+                                  isReserved: false
+                              }
+                          });
+                      }
+                  });
+                  current.setDate(current.getDate() + 1);
+              }
+              return slots;
+
           }
 
             // 設定日曆的範圍，將 lastBookableDate 作為結束日期
             const startDate = new Date();
             const endDate = new Date(lastBookableDate);
-
+            
             // 動態生成所有時間段
             const slots = generateSlots(startDate, endDate, unavailableDates, reservedTimeSlots);
 
@@ -244,20 +218,18 @@
                     const eventEl = info.el;
                     
                     // 檢查是否點擊了可用的時間段
-                    if (dateInput.value && timeSlotInput.value && eventEl.classList.contains("slot-selected")) {
+                    if ( timeSlotInput.value && eventEl.classList.contains("slot-selected")) {
                         // 恢復為可選狀態
                         eventEl.classList.remove("slot-selected");
                         eventEl.classList.add("slot-available");
-                        dateInput.value = "";
                         timeSlotInput.value = "";
-                    }else if(dateInput.value && timeSlotInput.value){
+                    }else if(timeSlotInput.value){
                         alert("一次只能選擇一個時段，請先取消原有的選擇");
                     }else{
                         // 標記為選中並更新表單輸入
                         eventEl.classList.remove("slot-available");
                         eventEl.classList.add("slot-selected");
-                        dateInput.value = info.event.start.toISOString().split("T")[0];
-                        timeSlotInput.value = info.event.title;
+                        timeSlotInput.value = `${info.event.start.toISOString().split("T")[0]}，${info.event.title}`;
                     }
                 }
             });

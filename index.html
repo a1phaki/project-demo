@@ -39,6 +39,7 @@
         const lineID = document.getElementById('LineID').value;
         const phone = document.getElementById('phone').value;
         const birthday = document.getElementById('birthday').value;
+        //http://localhost:3000/members?email=${encodeURIComponent(email)}
 
         // 檢查 Email 是否已被註冊
         axios.get(`https://webtestapi-e228e4978c3c.herokuapp.com/members?email=${encodeURIComponent(email)}`)

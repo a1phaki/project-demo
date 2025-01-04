@@ -172,8 +172,8 @@
                     )
                     .then(function(response) {
                         console.log('response:', response);
-                        // alert('Last bookable date 已更新！頁面將重新整理。');
-                        // location.reload(); // 重整畫面
+                        alert('Last bookable date 已更新！頁面將重新整理。');
+                        location.reload(); // 重整畫面
                     })
                     .catch(function(error) {
                         if (error.response && error.response.status === 401) {

@@ -37,6 +37,7 @@
   </style>
 </head>
 <body>
+  <button class="appointment">點擊預約</button>
   <h1>會員訂單詳情</h1>
   <div class="orders-container" id="ordersContainer">
     <p>載入中...</p>
@@ -48,6 +49,10 @@
     document.addEventListener('DOMContentLoaded', function () {
       const ordersContainer = document.getElementById('ordersContainer');
       const errorMessage = document.getElementById('errorMessage');
+      const appointmentBtn = document.querySelector('.appointment');
+      appointmentBtn.addEventListener('click', function () {
+        window.location.href = 'appointment.html';
+      });
 
       // 獲取儲存的 Token
       const token = localStorage.getItem('token');

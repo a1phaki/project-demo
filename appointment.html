@@ -211,11 +211,11 @@
 
         // 收集表單資料
         const reservationData = {
-            name: userData[0].name,
-            birthday: userData[0].birthday,
-            email: userData[0].email,
-            phone: userData[0].phone,
-            LineID: userData[0].LineID,
+            name: userData.name,
+            birthday: userData.birthday,
+            email: userData.email,
+            phone: userData.phone,
+            LineID: userData.LineID,
             date: date,
             timeSlot: timeSlot,
             bodyPart: document.getElementById('bodyPart').value,
@@ -235,7 +235,7 @@
             console.log('PATCH 回應:', patchResponse.data);
             console.log('POST 回應:', postResponse.data);
             alert('預約成功');
-            window.location.href = 'admin.html'; // 跳轉到管理頁面
+            window.location.href = 'orders.html'; // 跳轉到管理頁面
         })
         .catch(error => {
             console.error('發送請求時發生錯誤:', error);

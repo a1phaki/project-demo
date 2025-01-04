@@ -49,8 +49,9 @@
               // 將 Token 和會員資料記錄到 localStorage
               localStorage.setItem('token', token);
               localStorage.setItem('user', JSON.stringify(user));
+
               alert(`登入成功，歡迎 ${user.name}！`);
-              window.location.href = 'orders.html';
+              
               if (user.user === 'admin') {
                 // 如果是 admin，跳轉到 admin 頁面
                 window.location.href = 'admin.html';

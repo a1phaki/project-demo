@@ -76,40 +76,59 @@
   <script>
     // 嘗試從 localStorage 中獲取已登入的使用者資料
     const userData = JSON.parse(localStorage.getItem('user'));
-    if (!userData) {
-        // 如果無法取得使用者資料，提示使用者並跳轉回登入頁面
-        alert('無法取得使用者資料，請確認您已登入。');
-        window.location.href = 'login.html';
-    }
+    const token = localStorage.getItem('token');
+
+    
 
     let reservedTimeSlots = []; // 儲存已預約的時間段
 
     // 等待 DOM 加載完成後執行初始化邏輯
     document.addEventListener('DOMContentLoaded', function () {
+
+        if (!userData) {
+            // 如果無法取得使用者資料，提示使用者並跳轉回登入頁面
+            alert('無法取得使用者資料，請確認您已登入。');
+            window.location.href = 'login.html';
+        }
+
         const timeSlotInput = document.getElementById("timeSlot"); // 獲取時間段輸入框的 DOM 元素
 
         // 向後端請求 scheduleConfig 的資料
         axios
-          .get("https://webtestapi-e228e4978c3c.herokuapp.com/scheduleConfig")
-          .then(function (response) {
-              const scheduleConfig = response.data; // 儲存返回的時間配置資料
-              const id = scheduleConfig[0].id; // 獲取第一個時間配置的 ID
+            .get("https://webtestapi-e228e4978c3c.herokuapp.com/scheduleConfig", {
+                headers: { Authorization: `Bearer ${token}` } // 加入 Token 驗證
+            })
+            .then(function (response) {
+                const scheduleConfig = response.data; // 儲存返回的時間配置資料
 
-              // 將 scheduleConfig 的 ID 儲存到 localStorage
-              localStorage.setItem('scheduleConfigId', id);
+                if (!scheduleConfig || scheduleConfig.length === 0) {
+                    throw new Error("無法獲取有效的時間配置資料");
+                }
 
-              // 初始化必要的資料：不可預約日期、已預約時段及可預約的最後一天
-              const lastBookableDate = scheduleConfig[0]?.lastBookableDate || getLastDayOfCurrentMonth(); // 默認為當月最後一天
-              const unavailableDates = scheduleConfig[0]?.unavailableTimeSlots || []; // 不可預約日期
-              reservedTimeSlots = scheduleConfig[0]?.reservedTimeSlots || []; // 已預約時段
+                const id = scheduleConfig[0].id; // 獲取第一個時間配置的 ID
 
-              // 初始化日曆
-              initializeCalendar(unavailableDates, reservedTimeSlots, lastBookableDate, scheduleConfig);
-          })
-          .catch(function (error) {
-              // 如果請求失敗，輸出錯誤訊息
-              console.error("Error fetching data:", error);
-          });
+                // 將 scheduleConfig 的 ID 儲存到 localStorage
+                localStorage.setItem('scheduleConfigId', id);
+
+                // 初始化必要的資料
+                const lastBookableDate = scheduleConfig[0]?.lastBookableDate || getLastDayOfCurrentMonth(); // 默認為當月最後一天
+                const unavailableDates = scheduleConfig[0]?.unavailableTimeSlots || []; // 不可預約日期
+                reservedTimeSlots = scheduleConfig[0]?.reservedTimeSlots || []; // 已預約時段
+
+                // 初始化日曆
+                initializeCalendar(unavailableDates, reservedTimeSlots, lastBookableDate, scheduleConfig);
+
+            })
+            .catch(function (error) {
+
+                if (error.response && error.response.status === 401) {
+                    alert("身份驗證失敗，請重新登入");
+                    window.location.href = 'login.html'; // 跳轉到登入頁面
+                } else {
+                    alert("無法獲取時間配置資料，請稍後重試");
+                }
+            });
+
 
         // 獲取當月最後一天的函數
         function getLastDayOfCurrentMonth() {
@@ -206,8 +225,9 @@
     document.getElementById('reservationForm').addEventListener('submit', function (e) {
         e.preventDefault(); // 防止表單的默認提交行為
 
-        const date = document.getElementById('timeSlot').value.split('，')[0]; // 獲取選擇的日期
-        const timeSlot = document.getElementById('timeSlot').value.split('，')[1]; // 獲取選擇的時段
+        const selectedTimeSlot = document.getElementById('timeSlot').value.split('，');
+        const date = selectedTimeSlot[0]; // 獲取選擇的日期
+        const timeSlot = selectedTimeSlot[1]; // 獲取選擇的時段
 
         // 收集表單資料
         const reservationData = {
@@ -219,29 +239,42 @@
             date: date,
             timeSlot: timeSlot,
             bodyPart: document.getElementById('bodyPart').value,
-            nailRemoval: document.getElementById('nailRemoval').value === 'true',
-            nailExtension: document.getElementById('nailExtension').value === 'true'
+            nailRemoval: document.getElementById('nailRemoval').value, // 改為 checkbox 的布林值
+            nailExtension: document.getElementById('nailExtension').value // 改為 checkbox 的布林值
         };
 
         reservedTimeSlots.push({ date: date, timeSlot: timeSlot }); // 將新的預約時段加入已預約時段
         const storedId = localStorage.getItem('scheduleConfigId'); // 獲取 scheduleConfig 的 ID
+        
 
         // 並行發送兩個請求
         Promise.all([
-            axios.post('https://webtestapi-e228e4978c3c.herokuapp.com/appointment', reservationData),
-            axios.patch(`https://webtestapi-e228e4978c3c.herokuapp.com/scheduleConfig/${storedId}`, { reservedTimeSlots: reservedTimeSlots })
+            axios.post('https://webtestapi-e228e4978c3c.herokuapp.com/appointment', reservationData, {
+                headers: { Authorization: `Bearer ${token}` } // 加入 Token
+            }),
+            axios.patch(`https://webtestapi-e228e4978c3c.herokuapp.com/scheduleConfig/${storedId}`, { 
+                reservedTimeSlots: reservedTimeSlots 
+            }, {
+                headers: { Authorization: `Bearer ${token}` } // 加入 Token
+            })
         ])
         .then(([postResponse, patchResponse]) => {
-            console.log('PATCH 回應:', patchResponse.data);
-            console.log('POST 回應:', postResponse.data);
             alert('預約成功');
             window.location.href = 'orders.html'; // 跳轉到管理頁面
         })
         .catch(error => {
-            console.error('發送請求時發生錯誤:', error);
-            alert('請求失敗，請檢查網路或伺服器狀態');
+            // 處理錯誤狀況
+            if (error.response && error.response.status === 409) {
+                alert('該時段已被預約，請選擇其他時段');
+            } else if (error.response && error.response.status === 401) {
+                alert('身份驗證失敗，請重新登入');
+                window.location.href = 'login.html'; // 跳轉到登入頁面
+            } else {
+                alert('請求失敗，請檢查網路或伺服器狀態');
+            }
         });
     });
+
   </script>
 
 </body>

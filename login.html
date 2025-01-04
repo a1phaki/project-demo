@@ -41,7 +41,6 @@
       })
           .then(response => {
               // 從伺服器獲取資料
-              console.log('回應:', response);
               
               const token = response.data.token; // 假設伺服器回傳 token
               const user = response.data.user;   // 假設伺服器回傳使用者資料

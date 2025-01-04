@@ -171,15 +171,16 @@
                         { headers: { Authorization: `Bearer ${token}` } } // 添加 Authorization 標頭
                     )
                     .then(function(response) {
-                        alert('Last bookable date 已更新！頁面將重新整理。');
-                        location.reload(); // 重整畫面
+                        console.log('response:', response);
+                        // alert('Last bookable date 已更新！頁面將重新整理。');
+                        // location.reload(); // 重整畫面
                     })
                     .catch(function(error) {
                         if (error.response && error.response.status === 401) {
                             alert("身份驗證失敗，請重新登入");
                             window.location.href = 'login.html'; // 跳轉到登入頁面
                         } else {
-                            alert("更新失敗，請稍後重試");
+                            alert(error.response.data.message);
                         }
                     });
                 }
@@ -198,12 +199,8 @@
                     location.reload();
                 })
                 .catch(function(error) {
-                    if (error.response && error.response.status === 401) {
-                        alert("身份驗證失敗，請重新登入");
-                        window.location.href = 'login.html'; // 跳轉到登入頁面
-                    } else {
-                        alert("更新失敗，請稍後重試");
-                    }
+                    alert(error.response.data.message);
+
                 });
             });
 

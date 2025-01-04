@@ -39,40 +39,36 @@
         const lineID = document.getElementById('LineID').value;
         const phone = document.getElementById('phone').value;
         const birthday = document.getElementById('birthday').value;
-        //http://localhost:3000/members?email=${encodeURIComponent(email)}
 
-        // 檢查 Email 是否已被註冊
-        axios.get(`https://webtestapi-e228e4978c3c.herokuapp.com/members?email=${encodeURIComponent(email)}`)
+        // 進行註冊 API 請求
+        const data = {
+            user: 'user',
+            name: name,
+            email: email,
+            password: password,
+            LineID: lineID,
+            phone: phone,
+            birthday: birthday
+        };
+
+        // 呼叫註冊 API
+        axios.post('https://webtestapi-e228e4978c3c.herokuapp.com/register', data)
             .then(function (response) {
-                if (response.data.length > 0) {
-                    alert('此 Email 已被註冊，請使用其他 Email');
+              console.log('response:', response);
+                if (response.data.success) {
+                    
+                    alert('註冊成功');
+                    window.location.href = 'login.html';  // 註冊成功後跳轉到登入頁
                 } else {
-                    // 如果 Email 未被註冊，進行註冊
-                    const data = {
-                        user:'user',
-                        name: name,
-                        email: email,
-                        password: password,
-                        LineID: lineID,
-                        phone: phone,
-                        birthday: birthday
-                    };
-
-                    axios.post('https://webtestapi-e228e4978c3c.herokuapp.com/members', data)
-                        .then(function () {
-                            alert('註冊成功');
-                            window.location.href = 'login.html';
-                        })
-                        .catch(function () {
-                            alert('註冊失敗，請稍後再試');
-                        });
+                    alert(response.data.message);  // 顯示註冊錯誤信息
                 }
             })
             .catch(function () {
-                alert('檢查 Email 時發生錯誤，請稍後再試');
+                alert('註冊失敗，請稍後再試');
             });
     });
-
   </script>
+
+
 </body>
 </html>

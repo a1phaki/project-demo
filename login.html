@@ -35,32 +35,29 @@
       }
 
       // 登入按鈕的事件處理
-      axios.get(`https://webtestapi-e228e4978c3c.herokuapp.com/members?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`)
+      axios.post(`https://webtestapi-e228e4978c3c.herokuapp.com/login`,{
+            email: email,
+            password: password
+      })
           .then(response => {
               // 從伺服器獲取資料
-              const user = response.data[0]; // 假設返回的結果是陣列，取第一個匹配的使用者
-              console.log(user);
-              if(user){
-                alert('登入成功');
-              }
-              // 驗證使用者是否存在，以及密碼是否正確
-              // if (user && user.password === password) {
-              //     // 如果登入成功，提示使用者並儲存資料到 localStorage
-              //     alert('登入成功');
-              //     localStorage.setItem('user', JSON.stringify(user));
+              console.log('回應:', response);
+              
+              const token = response.data.token; // 假設伺服器回傳 token
+              const user = response.data.user;   // 假設伺服器回傳使用者資料
 
-              //     // 根據使用者角色跳轉到相應頁面
-              //     if (user.user === 'admin') {
-              //         // 如果是管理員，跳轉到管理頁面
-              //         window.location.href = 'admin.html';
-              //     } else {
-              //         // 如果是普通使用者，跳轉到預約頁面
-              //         window.location.href = 'appointment.html';
-              //     }
-              // } else {
-              //     // 如果密碼錯誤或找不到使用者，顯示錯誤訊息
-              //     alert('登入失敗，請檢查您的郵件或密碼');
-              // }
+              // 將 Token 和會員資料記錄到 localStorage
+              localStorage.setItem('token', token);
+              localStorage.setItem('user', JSON.stringify(user));
+              alert(`登入成功，歡迎 ${user.name}！`);
+              window.location.href = 'orders.html';
+              if (user.user === 'admin') {
+                // 如果是 admin，跳轉到 admin 頁面
+                window.location.href = 'admin.html';
+              } else {
+                // 如果是普通用戶，跳轉到 orders 頁面
+                window.location.href = 'orders.html';
+              }
           })
           .catch(error => {
               // 如果請求出現錯誤（如伺服器無法連線），顯示錯誤訊息

@@ -13,6 +13,15 @@
             text-align: center;
             margin: 20px 0;
         }
+        .member-info, .order-info {
+            margin: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .member-info h3, .order-info h3 {
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -24,6 +33,23 @@
     </div>
 
     <div id='calendar'></div>
+
+    <!-- 顯示會員資料 -->
+    <div class="member-info">
+        <h3>會員資料</h3>
+        <ul id="members-list">
+            <!-- 會員資料會顯示在這裡 -->
+        </ul>
+    </div>
+
+    <!-- 顯示訂單資料 -->
+    <div class="order-info">
+        <h3>訂單資料</h3>
+        <ul id="orders-list">
+            <!-- 訂單資料會顯示在這裡 -->
+        </ul>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
@@ -32,6 +58,7 @@
             const updateBtn = document.getElementById('update');
             const setLastBookableDateBtn = document.getElementById('setLastBookableDate'); // 獲取 "Set Date" 按鈕
             let unavailableDates = [];
+            const token = localStorage.getItem('token');
 
             axios.get("https://webtestapi-e228e4978c3c.herokuapp.com/scheduleConfig")
                 .then(function (response) {
@@ -90,7 +117,7 @@
                 const startDate = new Date();
                 const endDate = new Date(lastBookableDate);
 
-                while (startDate <= endDate||formatDate(startDate) === formatDate(endDate)) {
+                while (startDate <= endDate || formatDate(startDate) === formatDate(endDate)) {
                     const dateStr = formatDate(startDate);
                     if (!unavailableDates.includes(dateStr) && !reservedTimeSlots.some(slot => slot.date === dateStr)) {
                         events.push({
@@ -163,8 +190,53 @@
                     console.error("Error updating unavailable dates:", error);
                 });
             });
-        });
 
+            // 拉取所有會員資料並顯示
+            axios.get('https://webtestapi-e228e4978c3c.herokuapp.com/members',{
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(function (response) {
+                    console.log('response:', response);
+                    const members = response.data;
+                    const membersList = document.getElementById('members-list');
+                    membersList.innerHTML = members.map(member => `
+                        <li>
+                            <strong>${member.name}</strong> - ${member.email}<br>
+                            Line ID: ${member.LineID}<br>
+                            Phone: ${member.phone}<br>
+                            Birthday: ${member.birthday}
+                        </li>
+                    `).join('');
+                })
+                .catch(function (error) {
+                    console.error('Error fetching members:', error);
+                });
+
+            // 拉取所有訂單資料並顯示
+            axios.get('https://webtestapi-e228e4978c3c.herokuapp.com/appointment',{
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(function (response) {
+                    const appointments = response.data;
+                    console.log('appointments:', appointments);
+                    const ordersList = document.getElementById('orders-list');
+                    ordersList.innerHTML = appointments.map(order => `
+                        <li>
+                            <strong>${order.name}</strong><br>
+                            Date: ${order.date} - ${order.timeSlot}<br>
+                            Body Part: ${order.bodyPart}<br>
+                            Nail Removal: ${order.nailRemoval} - Nail Extension: ${order.nailExtension}
+                        </li>
+                    `).join('');
+                })
+                .catch(function (error) {
+                    console.error('Error fetching appointments:', error);
+                });
+        });
     </script>
 </body>
 </html>

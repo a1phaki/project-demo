@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>會員訂單詳情</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .orders-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+    }
+    .order-item {
+      margin-bottom: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background-color: #fff;
+    }
+    .order-item p {
+      margin: 5px 0;
+    }
+    .error {
+      color: red;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>會員訂單詳情</h1>
+  <div class="orders-container" id="ordersContainer">
+    <p>載入中...</p>
+  </div>
+  <div class="error" id="errorMessage"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const ordersContainer = document.getElementById('ordersContainer');
+      const errorMessage = document.getElementById('errorMessage');
+
+      // 獲取儲存的 Token
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        errorMessage.textContent = '您尚未登入，無法檢視訂單。';
+        ordersContainer.innerHTML = '';
+        return;
+      }
+
+      // 向伺服器發送 GET 請求以獲取訂單資料
+      axios.get('https://webtestapi-e228e4978c3c.herokuapp.com/appointment', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then(response => {
+        const orders = response.data; // 假設返回的訂單陣列
+        renderOrders(orders);
+      })
+      .catch(error => {
+        console.error('錯誤:', error);
+        errorMessage.textContent = '無法載入訂單，請稍後再試。';
+      });
+
+      // 渲染訂單
+      function renderOrders(orders) {
+        if (orders.length === 0) {
+          ordersContainer.innerHTML = '<p>目前沒有訂單。</p>';
+          return;
+        }
+
+        ordersContainer.innerHTML = ''; // 清空載入中訊息
+        orders.forEach(order => {
+          const orderElement = document.createElement('div');
+          orderElement.className = 'order-item';
+          orderElement.innerHTML = `
+            <p><strong>訂單編號:</strong> ${order.id}</p>
+            <p><strong>姓名:</strong> ${order.name}</p>
+            <p><strong>生日:</strong> ${order.birthday}</p>
+            <p><strong>Email:</strong> ${order.email}</p>
+            <p><strong>電話:</strong> ${order.phone}</p>
+            <p><strong>LineID:</strong> ${order.LineID}</p>
+            <p><strong>日期:</strong> ${order.date}</p>
+            <p><strong>時間:</strong> ${order.timeSlot}</p>
+            <p><strong>服務部位:</strong> ${order.bodyPart}</p>
+            <p><strong>卸甲服務:</strong> ${order.nailRemoval ? '是' : '否'}</p>
+            <p><strong>延甲服務:</strong> ${order.nailExtension ? '是' : '否'}</p>
+          `;
+          ordersContainer.appendChild(orderElement);
+        });
+      }
+    });
+  </script>
+</body>
+</html>

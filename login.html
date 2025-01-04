@@ -60,9 +60,7 @@
               }
           })
           .catch(error => {
-              // 如果請求出現錯誤（如伺服器無法連線），顯示錯誤訊息
-              alert('登入失敗，請檢查您的網路或伺服器');
-              console.error('錯誤:', error);
+              alert(error.response.data.message);
           });
     });
   </script>

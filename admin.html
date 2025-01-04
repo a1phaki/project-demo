@@ -159,37 +159,54 @@
             }
 
             // 點擊 "Set Date" 按鈕，將選擇的日期更新到 API
+            // 點擊 "Set Last Bookable Date" 按鈕，更新 lastBookableDate
             setLastBookableDateBtn.addEventListener('click', function () {
                 const selectedDate = document.getElementById('lastBookableDate').value;
+                const storedId = localStorage.getItem('scheduleConfigId');
 
                 if (selectedDate) {
-                    axios.patch(`https://webtestapi-e228e4978c3c.herokuapp.com/scheduleConfig/${localStorage.getItem('scheduleConfigId')}`, {
-                        lastBookableDate: selectedDate
-                    })
+                    axios.patch(
+                        `https://webtestapi-e228e4978c3c.herokuapp.com/scheduleConfig/${storedId}`,
+                        { lastBookableDate: selectedDate },
+                        { headers: { Authorization: `Bearer ${token}` } } // 添加 Authorization 標頭
+                    )
                     .then(function(response) {
                         alert('Last bookable date 已更新！頁面將重新整理。');
                         location.reload(); // 重整畫面
                     })
                     .catch(function(error) {
-                        console.error("Error updating last bookable date:", error);
+                        if (error.response && error.response.status === 401) {
+                            alert("身份驗證失敗，請重新登入");
+                            window.location.href = 'login.html'; // 跳轉到登入頁面
+                        } else {
+                            alert("更新失敗，請稍後重試");
+                        }
                     });
                 }
             });
 
-            // 點擊 "Update" 按鈕，將 unavailableDates 更新到 API
+            // 點擊 "Update" 按鈕，更新 unavailableDates
             updateBtn.addEventListener('click', function () {
-                axios.patch(`https://webtestapi-e228e4978c3c.herokuapp.com/scheduleConfig/${localStorage.getItem('scheduleConfigId')}`, {
-                    unavailableTimeSlots: unavailableDates
-                })
+                const storedId = localStorage.getItem('scheduleConfigId');
+
+                axios.patch(`https://webtestapi-e228e4978c3c.herokuapp.com/scheduleConfig/${storedId}`,
+                    { unavailableTimeSlots: unavailableDates },
+                    { headers: { Authorization: `Bearer ${token}` } } // 添加 Authorization 標頭
+                )
                 .then(function(response) {
-                    console.log("Unavailable dates updated:", response.data);
                     alert('Unavailable dates 已更新！頁面將重新整理。');
                     location.reload();
                 })
                 .catch(function(error) {
-                    console.error("Error updating unavailable dates:", error);
+                    if (error.response && error.response.status === 401) {
+                        alert("身份驗證失敗，請重新登入");
+                        window.location.href = 'login.html'; // 跳轉到登入頁面
+                    } else {
+                        alert("更新失敗，請稍後重試");
+                    }
                 });
             });
+
 
             // 拉取所有會員資料並顯示
             axios.get('https://webtestapi-e228e4978c3c.herokuapp.com/members',{

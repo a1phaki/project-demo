@@ -54,13 +54,8 @@
         // 呼叫註冊 API
         axios.post('https://webtestapi-e228e4978c3c.herokuapp.com/register', data)
             .then(function (response) {
-              console.log('response:', response);
-                if (response.data.success) {
-                    alert('註冊成功');
-                    window.location.href = 'login.html';  // 註冊成功後跳轉到登入頁
-                } else {
-                    alert(response.data.message);  // 顯示註冊錯誤信息
-                }
+              alert('註冊成功');
+              window.location.href = 'login.html';  // 註冊成功後跳轉到登入頁    
             })
             .catch(function () {
                 alert('註冊失敗，請稍後再試');

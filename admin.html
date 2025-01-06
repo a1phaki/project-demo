@@ -60,7 +60,7 @@
             let unavailableDates = [];
             const token = localStorage.getItem('token');
 
-            axios.get("https://webtestapi-e228e4978c3c.herokuapp.com/scheduleConfig")
+            axios.get("https://webtestapi-e228e4978c3c.herokuapp.com/scheduleConfig",{ headers: { Authorization: `Bearer ${token}` } })
                 .then(function (response) {
                     const scheduleConfig = response.data[0];
                     const id = scheduleConfig.id;

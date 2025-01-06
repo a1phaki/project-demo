@@ -264,6 +264,7 @@
             window.location.href = 'orders.html'; // 跳轉到管理頁面
         })
         .catch(error => {
+            console.log(error)
             // 處理錯誤狀況
             if (error.response && error.response.status === 409) {
                 alert('該時段已被預約，請選擇其他時段');
@@ -271,6 +272,7 @@
                 alert('身份驗證失敗，請重新登入');
                 window.location.href = 'login.html'; // 跳轉到登入頁面
             } else {
+                
                 alert('請求失敗，請檢查網路或伺服器狀態');
             }
         });

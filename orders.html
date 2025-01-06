@@ -47,6 +47,8 @@
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
+
+
       const ordersContainer = document.getElementById('ordersContainer');
       const errorMessage = document.getElementById('errorMessage');
       const appointmentBtn = document.querySelector('.appointment');
@@ -98,8 +100,8 @@
             <p><strong>日期:</strong> ${order.date}</p>
             <p><strong>時間:</strong> ${order.timeSlot}</p>
             <p><strong>服務部位:</strong> ${order.bodyPart}</p>
-            <p><strong>卸甲服務:</strong> ${order.nailRemoval ? '是' : '否'}</p>
-            <p><strong>延甲服務:</strong> ${order.nailExtension ? '是' : '否'}</p>
+            <p><strong>卸甲服務:</strong> ${order.nailRemoval}</p>
+            <p><strong>延甲服務:</strong> ${order.nailExtension}</p>
           `;
           ordersContainer.appendChild(orderElement);
         });

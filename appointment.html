@@ -78,7 +78,7 @@
     const userData = JSON.parse(localStorage.getItem('user'));
     const token = localStorage.getItem('token');
 
-    
+    console.log(userData);
 
     let reservedTimeSlots = []; // 儲存已預約的時間段
 
@@ -246,8 +246,8 @@
         reservedTimeSlots.push({ date: date, timeSlot: timeSlot }); // 將新的預約時段加入已預約時段
         const storedId = localStorage.getItem('scheduleConfigId'); // 獲取 scheduleConfig 的 ID
         
-
-        // 並行發送兩個請求
+        
+        //並行發送兩個請求
         Promise.all([
             axios.post('https://webtestapi-e228e4978c3c.herokuapp.com/appointment', reservationData, {
                 headers: { Authorization: `Bearer ${token}` } // 加入 Token
@@ -260,6 +260,7 @@
         ])
         .then(([postResponse, patchResponse]) => {
             alert('預約成功');
+            alert(reservationData.name + '您已成功預約' + reservationData.date + ' ' + reservationData.timeSlot + '的服務');
             window.location.href = 'orders.html'; // 跳轉到管理頁面
         })
         .catch(error => {

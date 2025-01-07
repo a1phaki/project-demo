@@ -18,7 +18,8 @@
   </form>
 
   <h2 id="message" style="color: red;"></h2>
-
+  
+  <script src="config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script>
     // 綁定登入按鈕事件
@@ -35,7 +36,7 @@
       }
 
       // 登入按鈕的事件處理
-      axios.post(`https://webtestapi-e228e4978c3c.herokuapp.com/login`,{
+      axios.post(`${api_Path}/login`,{
             email: email,
             password: password
       })

@@ -44,6 +44,7 @@
   </div>
   <div class="error" id="errorMessage"></div>
 
+  <script src="config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -67,7 +68,7 @@
       }
 
       // 向伺服器發送 GET 請求以獲取訂單資料
-      axios.get('https://webtestapi-e228e4978c3c.herokuapp.com/appointment', {
+      axios.get(`${api_Path}/appointment`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then(response => {

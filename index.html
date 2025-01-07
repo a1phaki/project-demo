@@ -29,6 +29,7 @@
     <button type="button" class="signUp">註冊</button>
   </form>
 
+  <script src="config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
   <script>
     const signUpBtn = document.querySelector('.signUp');
@@ -52,7 +53,7 @@
         };
 
         // 呼叫註冊 API
-        axios.post('https://webtestapi-e228e4978c3c.herokuapp.com/register', data)
+        axios.post(`${api_Path}/register`, data)
             .then(function (response) {
               alert('註冊成功');
               window.location.href = 'login.html';  // 註冊成功後跳轉到登入頁    

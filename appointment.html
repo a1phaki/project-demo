@@ -71,6 +71,7 @@
     <div id="calendar"></div>
   </section>  
   
+  <script src="config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script>
@@ -94,8 +95,7 @@
         const timeSlotInput = document.getElementById("timeSlot"); // 獲取時間段輸入框的 DOM 元素
 
         // 向後端請求 scheduleConfig 的資料
-        axios
-            .get("https://webtestapi-e228e4978c3c.herokuapp.com/scheduleConfig", {
+        axios.get(`${api_Path}/scheduleConfig`, {
                 headers: { Authorization: `Bearer ${token}` } // 加入 Token 驗證
             })
             .then(function (response) {
@@ -249,10 +249,10 @@
         
         //並行發送兩個請求
         Promise.all([
-            axios.post('https://webtestapi-e228e4978c3c.herokuapp.com/appointment', reservationData, {
+            axios.post(`${api_Path}/appointment`, reservationData, {
                 headers: { Authorization: `Bearer ${token}` } // 加入 Token
             }),
-            axios.patch(`https://webtestapi-e228e4978c3c.herokuapp.com/scheduleConfig/${storedId}`, { 
+            axios.patch(`${api_Path}/scheduleConfig/${storedId}`, { 
                 reservedTimeSlots: reservedTimeSlots 
             }, {
                 headers: { Authorization: `Bearer ${token}` } // 加入 Token

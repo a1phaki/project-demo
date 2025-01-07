@@ -50,6 +50,7 @@
         </ul>
     </div>
 
+    <script src="config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
@@ -60,7 +61,7 @@
             let unavailableDates = [];
             const token = localStorage.getItem('token');
 
-            axios.get("https://webtestapi-e228e4978c3c.herokuapp.com/scheduleConfig",{ headers: { Authorization: `Bearer ${token}` } })
+            axios.get(`${api_Path}/scheduleConfig`,{ headers: { Authorization: `Bearer ${token}` } })
                 .then(function (response) {
                     const scheduleConfig = response.data[0];
                     const id = scheduleConfig.id;
@@ -165,8 +166,7 @@
                 const storedId = localStorage.getItem('scheduleConfigId');
 
                 if (selectedDate) {
-                    axios.patch(
-                        `https://webtestapi-e228e4978c3c.herokuapp.com/scheduleConfig/${storedId}`,
+                    axios.patch(`${api_Path}/scheduleConfig/${storedId}`,
                         { lastBookableDate: selectedDate },
                         { headers: { Authorization: `Bearer ${token}` } } // 添加 Authorization 標頭
                     )
@@ -190,7 +190,7 @@
             updateBtn.addEventListener('click', function () {
                 const storedId = localStorage.getItem('scheduleConfigId');
 
-                axios.patch(`https://webtestapi-e228e4978c3c.herokuapp.com/scheduleConfig/${storedId}`,
+                axios.patch(`${api_Path}/scheduleConfig/${storedId}`,
                     { unavailableTimeSlots: unavailableDates },
                     { headers: { Authorization: `Bearer ${token}` } } // 添加 Authorization 標頭
                 )
@@ -206,7 +206,7 @@
 
 
             // 拉取所有會員資料並顯示
-            axios.get('https://webtestapi-e228e4978c3c.herokuapp.com/members',{
+            axios.get(`${api_Path}/members`,{
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -229,7 +229,7 @@
                 });
 
             // 拉取所有訂單資料並顯示
-            axios.get('https://webtestapi-e228e4978c3c.herokuapp.com/appointment',{
+            axios.get(`${api_Path}/appointment`,{
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }

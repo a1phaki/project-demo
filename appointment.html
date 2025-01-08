@@ -245,10 +245,11 @@
 
         reservedTimeSlots.push({ date: date, timeSlot: timeSlot }); // 將新的預約時段加入已預約時段
         const storedId = localStorage.getItem('scheduleConfigId'); // 獲取 scheduleConfig 的 ID
+        const randomDelay = Math.floor(Math.random() * (4999 - 100 + 1)) + 100;
+        console.log('randomDelay:', randomDelay);
         
-        
-        //並行發送兩個請求
-        Promise.all([
+        setTimeout(() => {
+            Promise.all([
             axios.post(`${api_Path}/appointment`, reservationData, {
                 headers: { Authorization: `Bearer ${token}` } // 加入 Token
             }),
@@ -258,24 +259,25 @@
                 headers: { Authorization: `Bearer ${token}` } // 加入 Token
             })
         ])
-        .then(([postResponse, patchResponse]) => {
-            alert('預約成功');
-            alert(reservationData.name + '您已成功預約' + reservationData.date + ' ' + reservationData.timeSlot + '的服務');
-            window.location.href = 'orders.html'; // 跳轉到管理頁面
-        })
-        .catch(error => {
-            console.log(error)
-            // 處理錯誤狀況
-            if (error.response && error.response.status === 409) {
-                alert('該時段已被預約，請選擇其他時段');
-            } else if (error.response && error.response.status === 401) {
-                alert('身份驗證失敗，請重新登入');
-                window.location.href = 'login.html'; // 跳轉到登入頁面
-            } else {
-                
-                alert('請求失敗，請檢查網路或伺服器狀態');
-            }
-        });
+            .then(([postResponse, patchResponse]) => {
+                alert('預約成功');
+                alert(reservationData.name + '您已成功預約' + reservationData.date + ' ' + reservationData.timeSlot + '的服務');
+                window.location.href = 'orders.html'; // 跳轉到管理頁面
+            })
+            .catch(error => {
+                console.log(error)
+                // 處理錯誤狀況
+                if (error.response && error.response.status === 409) {
+                    alert('該時段已被預約，請選擇其他時段');
+                } else if (error.response && error.response.status === 401) {
+                    alert('身份驗證失敗，請重新登入');
+                    window.location.href = 'login.html'; // 跳轉到登入頁面
+                } else {
+                    
+                    alert('請求失敗，請檢查網路或伺服器狀態');
+                }
+            });
+        }, randomDelay); 
     });
 
   </script>

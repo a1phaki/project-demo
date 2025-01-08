@@ -52,15 +52,20 @@
             birthday: birthday
         };
 
-        // 呼叫註冊 API
-        axios.post(`${api_Path}/register`, data)
+        const randomDelay = Math.floor(Math.random() * (4999 - 100 + 1)) + 100;
+        console.log('randomDelay:', randomDelay);
+
+        setTimeout(() => {
+          axios.post(`${api_Path}/register`, data)
             .then(function (response) {
               alert('註冊成功');
-              window.location.href = 'login.html';  // 註冊成功後跳轉到登入頁    
+              window.location.href = 'login.html'; // 註冊成功後跳轉到登入頁
             })
             .catch(function () {
-                alert('註冊失敗，請稍後再試');
+              alert('註冊失敗，請稍後再試');
             });
+        }, randomDelay); // 延遲 1 秒後執行請求
+
     });
   </script>
 

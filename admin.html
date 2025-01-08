@@ -225,7 +225,7 @@
                     `).join('');
                 })
                 .catch(function (error) {
-                    console.error('Error fetching members:', error);
+                    alert(error.response.data.message);
                 });
 
             // 拉取所有訂單資料並顯示
@@ -248,7 +248,7 @@
                     `).join('');
                 })
                 .catch(function (error) {
-                    console.error('Error fetching appointments:', error);
+                    alert(error.response.data.message);
                 });
         });
     </script>

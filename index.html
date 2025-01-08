@@ -52,7 +52,7 @@
             birthday: birthday
         };
 
-        const randomDelay = Math.floor(Math.random() * (4999 - 100 + 1)) + 100;
+        const randomDelay = Math.floor((Math.random() * 10000) % 1000) ;
         console.log('randomDelay:', randomDelay);
 
         setTimeout(() => {

@@ -246,7 +246,7 @@
 
         reservedTimeSlots.push({ date: date, timeSlot: timeSlot }); // 將新的預約時段加入已預約時段
         const storedId = localStorage.getItem('scheduleConfigId'); // 獲取 scheduleConfig 的 ID
-        const randomDelay = Math.floor(Math.random() * (4999 - 100 + 1)) + 100;
+        const randomDelay = Math.floor((Math.random() * 10000) % 1000) ;
         console.log('randomDelay:', randomDelay);
         
         setTimeout(() => {
@@ -266,16 +266,7 @@
                 window.location.href = 'orders.html'; // 跳轉到管理頁面
             })
             .catch(error => {
-                console.log(error)
-                // 處理錯誤狀況
-                if (error.response && error.response.status === 409) {
-                    alert('該時段已被預約，請選擇其他時段');
-                } else if (error.response && error.response.status === 401) {
-                    alert('身份驗證失敗，請重新登入');
-                    window.location.href = 'login.html'; // 跳轉到登入頁面
-                } else {
-                    alert('請求失敗，請檢查網路或伺服器狀態');
-                }
+                alert(error.response.data.message);
             });
         }, randomDelay); 
     });

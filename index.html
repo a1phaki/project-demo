@@ -59,10 +59,10 @@
           axios.post(`${api_Path}/register`, data)
             .then(function (response) {
               alert('註冊成功');
-              // window.location.href = 'login.html'; // 註冊成功後跳轉到登入頁
+              window.location.href = 'login.html'; // 註冊成功後跳轉到登入頁
             })
-            .catch(function () {
-              alert('註冊失敗，請稍後再試');
+            .catch(function (error) {
+              console.error(error);
             });
         }, randomDelay); // 延遲 1 秒後執行請求
 

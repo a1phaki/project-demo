@@ -246,7 +246,7 @@
         reservedTimeSlots.push({ date: date, timeSlot: timeSlot }); // 將新的預約時段加入已預約時段
         const storedId = localStorage.getItem('scheduleConfigId'); // 獲取 scheduleConfig 的 ID
         const randomDelay = Math.floor(Math.random() * (4999 - 100 + 1)) + 100;
-        console.log('randomDelay:', randomDelay);
+        alert('randomDelay:', randomDelay);
         
         setTimeout(() => {
             Promise.all([

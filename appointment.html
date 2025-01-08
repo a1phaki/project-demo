@@ -201,20 +201,21 @@
                 initialDate: new Date(), // 起始顯示的日期
                 events: slots, // 載入動態生成的事件
                 eventClick: function (info) {
+                    const allEventEls = document.querySelectorAll('.fc-event'); // 獲取所有事件元素
                     const eventEl = info.el; // 獲取被點擊的事件元素
 
-                    // 如果已有選中的時段，需先取消選擇
-                    if (timeSlotInput.value && eventEl.classList.contains("slot-selected")) {
-                        eventEl.classList.remove("slot-selected");
-                        eventEl.classList.add("slot-available");
-                        timeSlotInput.value = ""; // 清空輸入框
-                    } else if (timeSlotInput.value) {
-                        alert("一次只能選擇一個時段，請先取消原有的選擇");
-                    } else {
-                        eventEl.classList.remove("slot-available");
-                        eventEl.classList.add("slot-selected");
-                        timeSlotInput.value = `${info.event.start.toISOString().split("T")[0]}，${info.event.title}`;
-                    }
+                    // 遍歷所有事件，重置為 slot-available
+                    allEventEls.forEach(el => {
+                    el.classList.remove("slot-selected");
+                    el.classList.add("slot-available");
+                    });
+
+                    // 將當前被點擊的事件設為 slot-selected
+                    eventEl.classList.remove("slot-available");
+                    eventEl.classList.add("slot-selected");
+
+                    // 更新輸入框值為當前選中的事件
+                    timeSlotInput.value = `${info.event.start.toISOString().split("T")[0]}，${info.event.title}`;
                 }
             });
             calendar.render(); // 渲染日曆

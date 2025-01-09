@@ -266,6 +266,7 @@
                 window.location.href = 'orders.html'; // 跳轉到管理頁面
             })
             .catch(error => {
+                console.log(error.response);
                 alert(error.response.data.message);
             });
         }, randomDelay); 

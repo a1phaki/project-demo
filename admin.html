@@ -166,7 +166,7 @@
                 const storedId = localStorage.getItem('scheduleConfigId');
 
                 if (selectedDate) {
-                    axios.patch(`${api_Path}/scheduleConfig/${storedId}`,
+                    axios.patch(`${api_Path}/scheduleConfig`,
                         { lastBookableDate: selectedDate },
                         { headers: { Authorization: `Bearer ${token}` } } // 添加 Authorization 標頭
                     )
@@ -190,7 +190,7 @@
             updateBtn.addEventListener('click', function () {
                 const storedId = localStorage.getItem('scheduleConfigId');
 
-                axios.patch(`${api_Path}/scheduleConfig/${storedId}`,
+                axios.patch(`${api_Path}/scheduleConfig`,
                     { unavailableTimeSlots: unavailableDates },
                     { headers: { Authorization: `Bearer ${token}` } } // 添加 Authorization 標頭
                 )

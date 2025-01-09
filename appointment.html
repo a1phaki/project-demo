@@ -254,7 +254,7 @@
             axios.post(`${api_Path}/appointments`, reservationData, {
                 headers: { Authorization: `Bearer ${token}` } // 加入 Token
             }),
-            axios.patch(`${api_Path}/scheduleConfig/${storedId}`, { 
+            axios.patch(`${api_Path}/scheduleConfig`, { 
                 reservedTimeSlots: reservedTimeSlots 
             }, {
                 headers: { Authorization: `Bearer ${token}` } // 加入 Token

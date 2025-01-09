@@ -58,8 +58,8 @@
         setTimeout(() => {
           axios.post(`${api_Path}/register`, data)
             .then(function (response) {
-              alert('註冊成功');
-              window.location.href = 'login.html'; // 註冊成功後跳轉到登入頁
+              console.log(response);
+              // window.location.href = 'login.html'; // 註冊成功後跳轉到登入頁
             })
             .catch(function (error) {
               alert(error.response.data.message);

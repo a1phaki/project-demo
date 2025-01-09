@@ -1,1 +1,1 @@
-const api_Path = 'https://web-project-api-c9rt.onrender.com'
+const api_Path = 'https://web-project-api-lqzu.onrender.com'

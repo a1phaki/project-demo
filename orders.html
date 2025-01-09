@@ -68,7 +68,7 @@
       }
 
       // 向伺服器發送 GET 請求以獲取訂單資料
-      axios.get(`${api_Path}/appointment`, {
+      axios.get(`${api_Path}/appointments`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then(response => {
